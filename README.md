@@ -55,10 +55,22 @@ beat is the real thing: a number that goes up and down.
 | 11 | 28/250 → 250/250 caught | same run, before and after |
 | 13 | the judge picked the first option 9/9; a poisoned note dragged 0.99 → 0.60 | `SuperInstance/jev-lab` |
 | 14 | UNDECIDED 6/6; AGREE 5/5 | `SuperInstance/arbiter` |
-| 16 | 455 versions, 131 bad entry points, 5,298 repos, 161 unfailable steps | the three censuses, in `SuperInstance/gitpp-reading-room` |
+| 16 | 455 versions checked, **36** with a missing entry point, **40** packages that install and then throw; 5,298 repos scanned completely, 161 CI steps that could not fail | the three censuses, in `SuperInstance/gitpp-reading-room` — and note the first census's numbers were **overstated 3.6x**; see the correction below |
 
 **If a number here is wrong, it is wrong in the open, with a link.** That is
-the point of the deck as much as its content.
+the point of the deck as much as its content — and it is not a slogan: an
+independent audit of this fleet found that **the first version of this deck
+quoted a census number 3.6x too high**, because that census had read npm's
+*abbreviated* packument, which silently strips `main`, `types` and
+`exports`. The number is corrected here.
+
+**The correction, for the record:** "131 of 455 versions declare an entry
+point they do not ship" was wrong. The measured figure is **36 of 455
+(8.8%)** — the 131 was an artefact of the abbreviated packument, which
+makes every package look like it is missing its entry point. And "12
+versions throw on require()" was wrong in the other direction: **40
+packages genuinely fail to load**, across 15 packages; the other 37
+"failures" were the audit's own harness not running `npm install`.
 
 ## The videos
 
