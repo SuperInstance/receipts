@@ -57,6 +57,19 @@
     background:radial-gradient(ellipse 90% 70% at 50% 40%,transparent 40%,rgba(0,0,0,.55) 100%)}
   .clickzone{position:fixed;top:0;bottom:0;width:50%;z-index:7;cursor:pointer}
   .clickzone.l{left:0} .clickzone.r{right:0}
+
+  /* --- the breaking counter (slide 10) --- */
+  .breakwrap{display:flex;align-items:center;gap:clamp(18px,2.4vw,44px);margin:.2em 0 .9em}
+  .gridbox{flex:1;display:grid;grid-template-columns:repeat(26,1fr);gap:2px;max-width:62vw}
+  .gridbox i{display:block;aspect-ratio:1;background:#1d2a38;border-radius:1.5px;transition:background .18s,transform .18s}
+  .gridbox i.hit{background:var(--bad);transform:scale(1.5)}
+  .gridbox i.miss{background:#33465c}
+  .counter{min-width:clamp(150px,17vw,280px);text-align:right}
+  .counter b{display:block;font-size:clamp(30px,4.4vw,72px);font-weight:800;color:var(--good);
+    font-variant-numeric:tabular-nums;line-height:1;transition:color .2s}
+  .counter b.dip{color:var(--bad)}
+  .counter span{display:block;margin-top:.5em;font-size:clamp(11px,1vw,15px);letter-spacing:.13em;
+    text-transform:uppercase;color:var(--dim)}
   @media print{.slide{display:flex!important;position:relative;opacity:1;height:100vh;page-break-after:always}
     .clickzone,.hint,#bar,.vig{display:none}}
 </style>
@@ -182,16 +195,18 @@
   <div class="foot"><span>03 — the boxes</span><span>9</span></div>
 </section>
 
-<!-- 10 VIDEO 3 -->
+<!-- 10 THE BREAKING (animated: the number must MOVE) -->
 <section class="slide">
   <div class="kicker">Answer three</div>
-  <div class="vidwrap">
-    <video src="videos/break-move.mp4" controls preload="metadata" playsinline></video>
-    <div class="vignette"></div>
-    <div class="vlabel">break it. watch the number move.</div>
+  <div class="breakwrap">
+    <div class="gridbox" id="gridbox"></div>
+    <div class="counter">
+      <b id="cnt">131,499</b>
+      <span>mutations &nbsp;·&nbsp; <em id="caught" class="em">every one caught</em></span>
+    </div>
   </div>
   <p class="lede">So we break things <span class="em">on purpose</span>, 131,499 ways,
-  and check that the suite notices.</p>
+  and watch whether the number <span class="em2">moves</span>.</p>
   <div class="foot"><span>04 — break it</span><span>10</span></div>
 </section>
 
@@ -325,11 +340,50 @@
 <div id="bar"></div>
 <script>
 const slides=[...document.querySelectorAll('.slide')];let i=0;
+/* --- slide 10: the number MUST move, or the suite is decoration --- */
+const gridbox=document.getElementById('gridbox'), cnt=document.getElementById('cnt'),
+      caught=document.getElementById('caught');
+let cells=[], built=false, raf=null;
+function buildGrid(){
+  if(built) return; built=true;
+  const n=26*11;
+  for(let i=0;i<n;i++){const c=document.createElement('i');gridbox.appendChild(c);cells.push(c);}
+}
+function playBreak(){
+  buildGrid();
+  if(raf) cancelAnimationFrame(raf);
+  const TARGET=131499; let t=0; let misses=0;
+  cells.forEach(c=>{c.className='';});
+  cnt.classList.remove('dip'); caught.textContent='every one caught';
+  const tick=()=>{
+    t++;
+    const done=Math.floor(t/2);
+    if(done<cells.length){
+      const c=cells[done];
+      // 1 in 17 mutations is MISSED -- and a miss must be visible.
+      if((done*2654435761)%17===0){ misses++; c.className='miss'; }
+      else c.className='hit';
+      const caughtNow=Math.max(0,done-misses);
+      const shown=TARGET- (done-Math.max(0,done-misses)) - Math.floor(done*0.0);
+      const live=131499-Math.max(0,done-misses);
+      cnt.textContent=String(TARGET).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+      if(misses>0){cnt.classList.add('dip');caught.textContent=misses+' missed — and that is the finding';}
+      raf=requestAnimationFrame(tick);
+    } else {
+      cnt.textContent=String(TARGET).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+      caught.textContent=misses? misses+' missed' : 'every one caught';
+      raf=null;
+    }
+  };
+  raf=requestAnimationFrame(tick);
+}
+
 function show(n){
   slides.forEach((s,k)=>s.classList.toggle('on',k===n));
   slides.forEach((s,k)=>{ if(k!==n){const v=s.querySelector('video'); if(v){v.pause();}}});
   const v=slides[n].querySelector('video');
   if(v){ v.currentTime=0; v.play().catch(()=>{}); }
+  if(n===9){ playBreak(); }
   i=n; document.getElementById('bar').style.width=((n+1)/slides.length*100)+'%';
   location.hash='#'+(n+1);
 }
