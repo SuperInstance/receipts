@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Green means nothing — a user's guide to not being lied to by software</title>
+<style>
+  :root{
+    --bg:#07090d; --ink:#e8eef7; --dim:#8a97a8; --line:#1b2430;
+    --good:#3ddc97; --bad:#ff6b6b; --warm:#ffb454; --cool:#5ac8fa; --key:#c792ea;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+  #deck{position:relative;width:100vw;height:100vh}
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+    padding:6vh 9vw;opacity:0;transition:opacity .38s ease}
+  .slide.on{display:flex;opacity:1}
+  .kicker{font-size:clamp(11px,1.05vw,15px);letter-spacing:.28em;text-transform:uppercase;color:var(--dim);margin-bottom:1.6em}
+  h1{font-size:clamp(38px,6.6vw,104px);line-height:1.02;margin:0 0 .34em;font-weight:800;letter-spacing:-.03em}
+  h2{font-size:clamp(28px,4.4vw,66px);line-height:1.06;margin:0 0 .4em;font-weight:800;letter-spacing:-.025em}
+  p{font-size:clamp(17px,1.62vw,30px);line-height:1.5;color:#c3cedd;margin:0 0 .8em;max-width:34em}
+  .lede{font-size:clamp(21px,2.15vw,40px);color:var(--ink);line-height:1.4;max-width:28em}
+  .em{color:var(--warm);font-weight:700}
+  .em2{color:var(--cool);font-weight:700}
+  .em3{color:var(--key);font-weight:700}
+  .num{font-variant-numeric:tabular-nums;color:var(--good);font-weight:800}
+  .bad{color:var(--bad);font-weight:700}
+  ul{font-size:clamp(16px,1.5vw,28px);line-height:1.55;color:#c3cedd;margin:.3em 0 0 1.1em;padding:0}
+  li{margin-bottom:.42em}
+  li::marker{color:var(--dim)}
+  .rule{width:64px;height:3px;background:var(--warm);margin:0 0 1.5em;border-radius:2px}
+  .card{border:1px solid var(--line);background:#0b0f16;border-radius:14px;padding:1.15em 1.35em;margin:.3em 0}
+  .card b{display:block;font-size:clamp(14px,1.2vw,21px);color:var(--ink);margin-bottom:.3em}
+  .card span{font-size:clamp(13px,1.12vw,20px);color:var(--dim);line-height:1.45}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1.1em;margin-top:.6em}
+  .quote{border-left:3px solid var(--key);padding:.2em 0 .2em 1.1em;margin:.5em 0 1em;color:var(--ink);
+    font-size:clamp(20px,2.05vw,38px);line-height:1.34;font-weight:650}
+  .vidwrap{position:relative;width:min(100%,1080px);aspect-ratio:16/9;background:#000;border-radius:14px;
+    overflow:hidden;border:1px solid var(--line);margin:.2em 0 .8em}
+  .vidwrap video{width:100%;height:100%;display:block;object-fit:cover}
+  .vignette{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 45%,rgba(7,9,13,.55) 100%)}
+  .vlabel{position:absolute;left:1.1em;bottom:.9em;font-size:clamp(11px,1vw,15px);letter-spacing:.2em;
+    text-transform:uppercase;color:#dfe8f2;text-shadow:0 2px 14px #000;pointer-events:none}
+  .stat{display:flex;gap:2.4em;margin:1.1em 0 .4em;flex-wrap:wrap}
+  .stat div b{display:block;font-size:clamp(26px,3.5vw,58px);color:var(--good);font-weight:800;
+    font-variant-numeric:tabular-nums;line-height:1}
+  .stat div span{font-size:clamp(11px,1vw,15px);color:var(--dim);letter-spacing:.14em;text-transform:uppercase}
+  .foot{position:absolute;left:9vw;right:9vw;bottom:2.2vh;display:flex;justify-content:space-between;
+    font-size:12px;color:#4d5a6b;letter-spacing:.12em;text-transform:uppercase}
+  #bar{position:fixed;left:0;bottom:0;height:2px;background:var(--warm);transition:width .38s ease;z-index:9}
+  .hint{position:fixed;right:2.4vw;bottom:4.4vh;font-size:12px;color:#4d5a6b;letter-spacing:.14em;
+    text-transform:uppercase;z-index:9}
+  .vig{position:fixed;inset:0;pointer-events:none;z-index:8;
+    background:radial-gradient(ellipse 90% 70% at 50% 40%,transparent 40%,rgba(0,0,0,.55) 100%)}
+  .clickzone{position:fixed;top:0;bottom:0;width:50%;z-index:7;cursor:pointer}
+  .clickzone.l{left:0} .clickzone.r{right:0}
+  @media print{.slide{display:flex!important;position:relative;opacity:1;height:100vh;page-break-after:always}
+    .clickzone,.hint,#bar,.vig{display:none}}
+</style>
+</head>
+<body>
+<div id="deck">
+
+<!-- 1 TITLE -->
+<section class="slide">
+  <div class="kicker">A user's guide to not being lied to by software</div>
+  <h1>Green means<br><span class="em">nothing.</span></h1>
+  <div class="rule"></div>
+  <p class="lede">You install a package. The badge is green. The README says
+  <span class="num">182 tests</span>. You ship it at 2am.</p>
+  <p>Everything in this deck is a number we measured, with a receipt.</p>
+  <div class="foot"><span>SuperInstance</span><span>2026</span></div>
+</section>
+
+<!-- 2 SCENARIO -->
+<section class="slide">
+  <div class="kicker">The situation</div>
+  <h2>Everything you are told is a <span class="em3">claim</span>.</h2>
+  <ul>
+    <li>The badge says <b>passing</b>.</li>
+    <li>The README says <b>182 tests</b>.</li>
+    <li>The changelog says <b>no known issues</b>.</li>
+    <li>The package says <b>5 ports, byte-identical</b>.</li>
+  </ul>
+  <p class="lede" style="margin-top:1em">None of those is a fact. They are
+  <span class="em">promises made by the thing that wants you to trust it.</span></p>
+  <div class="foot"><span>01 — the setup</span><span>2</span></div>
+</section>
+
+<!-- 3 QUESTION -->
+<section class="slide">
+  <div class="kicker">The question</div>
+  <h1 style="font-size:clamp(32px,5.2vw,86px)">What would make you<br><span class="em">believe</span> a badge?</h1>
+  <div class="rule"></div>
+  <p class="lede">Not "what would make it green." Green is easy. Green is
+  <em>free</em>.</p>
+  <p class="lede" style="margin-top:.5em">We went looking for that, and found
+  <span class="num">3</span> answers that work.</p>
+  <div class="foot"><span>01 — the setup</span><span>3</span></div>
+</section>
+
+<!-- 4 VIDEO 1 -->
+<section class="slide">
+  <div class="kicker">Answer one, the hard way</div>
+  <div class="vidwrap">
+    <video src="videos/green-light.mp4" controls preload="metadata" playsinline></video>
+    <div class="vignette"></div>
+    <div class="vlabel">a green light, not connected to anything</div>
+  </div>
+  <p class="lede">This is a CI badge. It was green.
+  <span class="bad">It had never been connected to anything.</span></p>
+  <div class="foot"><span>02 — the first lie</span><span>4</span></div>
+</section>
+
+<!-- 5 THE FIRST LIE -->
+<section class="slide">
+  <div class="kicker">What we found</div>
+  <h2>Four ways a badge goes green <span class="em3">without a single test running</span></h2>
+  <div class="grid">
+    <div class="card"><b>Zero jobs</b><span>A reusable workflow sat one folder too deep. The job count was <b>zero</b> — and the badge was still green.</span></div>
+    <div class="card"><b>Never wired to a push</b><span>It ran on a timer. GitHub's own docs: with no run on your branch, the badge shows <b>the most recent run across all branches</b>.</span></div>
+    <div class="card"><b>The corpus was empty</b><span>A <span style="font-family:monospace">|| true</span> fallback wrote <span style="font-family:monospace">[]</span> when generation failed. The comparison then agreed, perfectly, about nothing.</span></div>
+    <div class="card"><b>A participant that was absent</b><span>Four ports reported five ports' pass count, because a missing one was turned into a value instead of a failure.</span></div>
+  </div>
+  <div class="foot"><span>02 — the first lie</span><span>5</span></div>
+</section>
+
+<!-- 6 AHA 1 -->
+<section class="slide">
+  <div class="kicker">The first a-ha</div>
+  <h1 style="font-size:clamp(32px,5vw,80px)">A badge is a claim.<br>A <span class="em">receipt</span> is a fact.</h1>
+  <div class="rule"></div>
+  <p class="lede">A receipt says what ran, when, on what, and with what
+  result — so that <span class="em2">you can re-derive it yourself.</span></p>
+  <p style="margin-top:1em">Every number in this deck has one. No receipt, no number.</p>
+  <div class="foot"><span>02 — the first lie</span><span>6</span></div>
+</section>
+
+<!-- 7 VIDEO 2 -->
+<section class="slide">
+  <div class="kicker">Answer two, and it has a number in it</div>
+  <div class="vidwrap">
+    <video src="videos/boxes.mp4" controls preload="metadata" playsinline></video>
+    <div class="vignette"></div>
+    <div class="vlabel">131,499 boxes. one open.</div>
+  </div>
+  <p class="lede">This is a test corpus. Every single box was
+  <span class="em">green</span>.</p>
+  <div class="foot"><span>03 — the boxes</span><span>7</span></div>
+</section>
+
+<!-- 8 THE BOXES -->
+<section class="slide">
+  <div class="kicker">131,499 mutations, and not one of them was real</div>
+  <h2>The suite was testing a <span class="bad">copy</span>.</h2>
+  <p>A frozen fork of the code, months out of date, checked in beside the
+  real thing. So:</p>
+  <ul>
+    <li>It reported <span class="num">14,611</span> disagreements that were
+      <em>not real</em> — the copy was stale.</li>
+    <li>And the <span class="bad">real code was never exercised at all</span>.
+      A bug in it would have been invisible, forever.</li>
+  </ul>
+  <p class="lede" style="margin-top:.9em">And the deepest part: the fix had
+  already been made. <span class="em3">Months earlier. On a branch. Never merged.</span>
+  So the report read like a live bug, and it was a fix that never landed.</p>
+  <div class="foot"><span>03 — the boxes</span><span>8</span></div>
+</section>
+
+<!-- 9 AHA 2 -->
+<section class="slide">
+  <div class="kicker">The second a-ha</div>
+  <h1 style="font-size:clamp(30px,4.6vw,76px)">A test that cannot fail<br>is <span class="em">not a test</span>.</h1>
+  <div class="rule"></div>
+  <p class="lede">You cannot tell a real test from a decorative one by
+  watching it pass.</p>
+  <p class="lede" style="margin-top:.6em">You can only tell by
+  <span class="em2">watching it fail on purpose</span>.</p>
+  <div class="foot"><span>03 — the boxes</span><span>9</span></div>
+</section>
+
+<!-- 10 VIDEO 3 -->
+<section class="slide">
+  <div class="kicker">Answer three</div>
+  <div class="vidwrap">
+    <video src="videos/break-move.mp4" controls preload="metadata" playsinline></video>
+    <div class="vignette"></div>
+    <div class="vlabel">break it. watch the number move.</div>
+  </div>
+  <p class="lede">So we break things <span class="em">on purpose</span>, 131,499 ways,
+  and check that the suite notices.</p>
+  <div class="foot"><span>04 — break it</span><span>10</span></div>
+</section>
+
+<!-- 11 BREAK IT -->
+<section class="slide">
+  <div class="kicker">The measurement that makes a number mean something</div>
+  <h2>The only number worth quoting is the one that <span class="em">moves</span>.</h2>
+  <div class="stat">
+    <div><b>131,499</b><span>deliberate breakages</span></div>
+    <div><b>0</b><span>missed, after the fix</span></div>
+    <div><b>250/250</b><span>caught, once it drove the real code</span></div>
+  </div>
+  <p class="lede" style="margin-top:1.1em">Before the fix, the copy caught
+  <span class="num">28 of 250</span>. After, the real code caught
+  <span class="num">250 of 250</span>.</p>
+  <p>Same suite. Same green. <span class="em2">A completely different number —
+  and the second one was true.</span></p>
+  <div class="foot"><span>04 — break it</span><span>11</span></div>
+</section>
+
+<!-- 12 WITNESS -->
+<section class="slide">
+  <div class="kicker">So what do you actually buy?</div>
+  <h2>A <span class="em3">witness</span>.</h2>
+  <p>Every claim is recorded with a receipt, and the receipts are chained
+  to each other, so you cannot quietly edit one without the chain noticing.</p>
+  <div class="grid">
+    <div class="card"><b>Re-derivable</b><span>Run the same command on the same commit and you get the same bytes. Not "it was green" — <b>here is the run, here is the hash, here is the command</b>.</span></div>
+    <div class="card"><b>Chained</b><span>Each record carries the hash of the one before it. Change one, and everything after it stops verifying.</span></div>
+  </div>
+  <p class="lede" style="margin-top:1em">And a signed head, so the chain itself
+  cannot be quietly rewritten either.</p>
+  <div class="foot"><span>05 — the witness</span><span>12</span></div>
+</section>
+
+<!-- 13 JUDGE AND DIE -->
+<section class="slide">
+  <div class="kicker">The hardest idea, told as a pair</div>
+  <h2>You need a <span class="em">judge</span> and a <span class="em2">die</span>.</h2>
+  <div class="grid">
+    <div class="card"><b>The judge — reads</b><span>Given a document and a question, it returns how likely the answer is yes. It is smart, it is semantic, and it has <b>opinions</b>. We measured it preferring the <b>first</b> option 9 times out of 9, and a bad note in its memory could drag a true fact from 0.99 down to 0.60.</span></div>
+    <div class="card"><b>The die — does not read</b><span>A quantum random number generator. It has <b>no opinion</b> — that is the entire point, and that is also its limit: a die cannot answer a question. It can only make sure the question was not arranged by somebody who wanted a particular answer.</span></div>
+  </div>
+  <p class="lede" style="margin-top:1em">Neither is enough alone. A judge alone can be
+  steered. A die alone decides nothing.</p>
+  <div class="foot"><span>05 — the witness</span><span>13</span></div>
+</section>
+
+<!-- 14 DOUBLE PRESENTATION -->
+<section class="slide">
+  <div class="kicker">And the trick that makes them work together</div>
+  <h1 style="font-size:clamp(30px,4.6vw,76px)">Ask twice. Keep only<br>what <span class="em">agrees</span>.</h1>
+  <div class="rule"></div>
+  <p class="lede">Draw the order at random — and <span class="em3">commit to it
+  before asking</span>, so nobody can choose the order that flatters them.</p>
+  <p>Then ask the same question <span class="em2">in both orders</span>.</p>
+  <ul>
+    <li>Both orders give the same answer? <b>That's a fact.</b></li>
+    <li>They disagree? <b>Undecided.</b> And that is a real answer.</li>
+  </ul>
+  <p class="lede" style="margin-top:.7em">We ran it: identical options came back
+  <span class="num">UNDECIDED 6/6</span>. Real options agreed
+  <span class="num">5/5</span> — and it picked the side we did not expect,
+  which is how we knew it was reading and not just agreeing.</p>
+  <div class="foot"><span>05 — the witness</span><span>14</span></div>
+</section>
+
+<!-- 15 AHA 3 -->
+<section class="slide">
+  <div class="kicker">The third a-ha</div>
+  <h1 style="font-size:clamp(30px,4.6vw,78px)">"Undecided" is<br>a <span class="em">feature</span>.</h1>
+  <div class="rule"></div>
+  <p class="lede">Almost every system has to answer. A gate has to pass or
+  fail. A score has to be a number.</p>
+  <p class="lede" style="margin-top:.7em">So a system that can say
+  <span class="em3">"I don't know, and here is why"</span> is unusual — and it
+  is the one that saves you.</p>
+  <div class="foot"><span>05 — the witness</span><span>15</span></div>
+</section>
+
+<!-- 16 WHAT YOU GET -->
+<section class="slide">
+  <div class="kicker">What this buys you, concretely</div>
+  <h2>Everything here was found by the rule we just described.</h2>
+  <div class="stat">
+    <div><b>455</b><span>package versions checked</span></div>
+    <div><b>12</b><span>installed fine, then threw</span></div>
+    <div><b>5,298</b><span>repos scanned, completely</span></div>
+  </div>
+  <ul style="margin-top:.6em">
+    <li>161 packages audited; <span class="num">131</span> declared an entry
+      point they did not ship.</li>
+    <li>2,318 CI files read; <span class="num">161</span> steps could not fail.</li>
+    <li>A shipped package that installs cleanly and then throws on
+      <span class="em3">require()</span> — the install is the happy path, the use is the failure.</li>
+  </ul>
+  <p class="lede" style="margin-top:.7em">All of it fixed, all of it with a receipt,
+  all of it in the open.</p>
+  <div class="foot"><span>06 — what you get</span><span>16</span></div>
+</section>
+
+<!-- 17 THE QUESTION -->
+<section class="slide">
+  <div class="kicker">So, back to you, at 2am</div>
+  <h1 style="font-size:clamp(30px,4.6vw,78px)">Before you trust it:<br><span class="em">two questions</span>.</h1>
+  <div class="rule"></div>
+  <p class="lede"><b>1. Can it show you the receipt?</b><br>
+  <span style="color:var(--dim)">the run, the hash, the exact command</span></p>
+  <p class="lede" style="margin-top:.9em"><b>2. Can you re-derive it yourself?</b><br>
+  <span style="color:var(--dim)">and if you break it — does the number move?</span></p>
+  <div class="foot"><span>06 — what you get</span><span>17</span></div>
+</section>
+
+<!-- 18 CLOSING VIDEO -->
+<section class="slide">
+  <div class="kicker">The door is open</div>
+  <div class="vidwrap">
+    <video src="videos/superinstance-intro.mp4" controls preload="metadata" playsinline></video>
+    <div class="vignette"></div>
+  </div>
+  <p class="lede">Everything in this deck is in the open, with receipts.
+  Come and break something.</p>
+  <div class="foot"><span>SuperInstance</span><span>18</span></div>
+</section>
+
+</div>
+<div class="vig"></div>
+<div class="clickzone l" id="zl"></div>
+<div class="clickzone r" id="zr"></div>
+<div class="hint">← → space &nbsp;·&nbsp; f fullscreen</div>
+<div id="bar"></div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];let i=0;
+function show(n){
+  slides.forEach((s,k)=>s.classList.toggle('on',k===n));
+  slides.forEach((s,k)=>{ if(k!==n){const v=s.querySelector('video'); if(v){v.pause();}}});
+  const v=slides[n].querySelector('video');
+  if(v){ v.currentTime=0; v.play().catch(()=>{}); }
+  i=n; document.getElementById('bar').style.width=((n+1)/slides.length*100)+'%';
+  location.hash='#'+(n+1);
+}
+const next=()=>show(Math.min(i+1,slides.length-1));
+const prev=()=>show(Math.max(i-1,0));
+addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+  else if(e.key==='Home')show(0);
+  else if(e.key==='End')show(slides.length-1);
+  else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
+});
+document.getElementById('zr').onclick=next; document.getElementById('zl').onclick=prev;
+const h=parseInt((location.hash||'#1').slice(1),10);
+show(isNaN(h)?0:Math.min(Math.max(h-1,0),slides.length-1));
+</script>
+</body>
+</html>
