@@ -28,9 +28,9 @@ questions a normal person has:
 | 1–3 | you, at 2am, believing things | — |
 | 4–6 | **the green light that was never connected** | `videos/green-light.mp4` |
 | 7–9 | **131,499 boxes nobody opened** | `videos/boxes.mp4` |
-| 10–12 | break it, and watch the number move | **a live animation** (see below) |
-| 13–15 | the judge and the die; asking twice | — |
-| 16–18 | what you get; the two questions | `videos/superinstance-intro.mp4` |
+| 10–13 | break it, and watch the number move | `videos/break-move.mp4` + **a live animation** (see below) |
+| 14–16 | the judge and the die; asking twice | — |
+| 17–19 | what you get; the two questions | `videos/superinstance-intro.mp4` |
 
 **The two generated videos sit on the two hardest ideas** — an empty badge,
 and a corpus testing a copy — because those are the ones a diagram cannot
@@ -52,23 +52,21 @@ beat is the real thing: a number that goes up and down.
 | 1 | "182 tests" | `SuperInstance/AI-Writings` `AGENTS.md` — exactly right, and the 182 could not run |
 | 5 | four ways a badge goes green | the CI-bypass census, 2,318 workflow files |
 | 8 | 131,499 mutations; 14,611 phantom disagreements; the real code never exercised | the mutation corpus, after the copy was replaced by the real port |
-| 11 | 28/250 → 250/250 caught | same run, before and after |
-| 13 | the judge picked the first option 9/9; a poisoned note dragged 0.99 → 0.60 | `SuperInstance/jev-lab` |
-| 14 | UNDECIDED 6/6; AGREE 5/5 | `SuperInstance/arbiter` |
-| 16 | 455 versions, 131 bad entry points, 5,298 repos, 161 unfailable steps | the three censuses, in `SuperInstance/gitpp-reading-room` |
+| 12 | 28/250 → 250/250 caught | same run, before and after |
+| 14 | the judge picked the first option 9/9; a poisoned note dragged 0.99 → 0.60 | `SuperInstance/jev-lab` |
+| 15 | UNDECIDED 6/6; AGREE 5/5 | `SuperInstance/arbiter` |
+| 17 | 455 versions, 36 bad entry points, 5,298 repos, 161 unfailable steps | the three censuses, in `SuperInstance/gitpp-reading-room` |
 
 **If a number here is wrong, it is wrong in the open, with a link.** That is
 the point of the deck as much as its content.
 
 ## The videos
 
-- `green-light.mp4`, `boxes.mp4` — generated with MiniMax
+- `green-light.mp4`, `boxes.mp4`, `break-move.mp4` — generated with MiniMax
   (`MiniMax-Hailuo-02`), prompted for visuals that carry the idea without
   any text, because a video model asked to render words renders them badly.
-  The third prompt (`break-move`) is **in `video_jobs.json` and ready** — it
-  just could not be submitted, because the MiniMax token plan hit its credit
-  limit (`status_code 2056`) partway through the run. `python3 -m
-  videos.mkvid` will pick it up when there is credit.
+  The third one waited a long time on the credit limit (`status_code 2056`)
+  and came back when it cleared.
 - `superinstance-intro.mp4` — Casey Mezzoforte's original, from
   `SuperInstance/AI-Writings/videos/`.
 
@@ -77,6 +75,23 @@ Regenerate the three with:
 ```bash
 python3 -m videos.mkvid          # needs MINIMAX_KEY and credit
 ```
+
+**AND THE CHECKS, because a deck nobody checks is a decoration:**
+
+```bash
+python3 check-deck.py             # every referenced video exists; no orphans
+node   check-animation.mjs        # the slide-10 counter ACTUALLY MOVES
+```
+
+`check-animation.mjs` runs the deck's own inline script against a small DOM
+shim and asserts that the number moves, that it ends below 131,499, that it
+visibly dips, and that the caption agrees. It needs no browser.
+
+**It exists because the counter was a CONSTANT.** The deck's central slide
+says *"watch whether the number moves"* and the number had never moved —
+and the check that would have caught it did not exist. The test was
+verified against the old file, where it fails with three specific failures,
+so it is a check and not a comment.
 
 **Note:** `api.minimax.chat` REJECTS the key (`status_code 2049, "invalid
 api key"`). The working host is **`api.minimax.io`**. That cost one

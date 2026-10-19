@@ -195,19 +195,32 @@
   <div class="foot"><span>03 — the boxes</span><span>9</span></div>
 </section>
 
-<!-- 10 THE BREAKING (animated: the number must MOVE) -->
+<!-- 10 THE BREAKING (video) -->
 <section class="slide">
+  <div class="kicker">Answer three</div>
+  <div class="vidwrap">
+    <video src="videos/break-move.mp4" controls preload="metadata" playsinline></video>
+    <div class="vignette"></div>
+    <div class="vlabel">one block cracks, and the whole tower goes</div>
+  </div>
+  <p class="lede">Break one thing, and everything above it has to fall.
+  <span class="bad">That is what a mutation is.</span></p>
+  <div class="foot"><span>04 &mdash; break it</span><span>10</span></div>
+</section>
+
+<!-- 10 THE BREAKING (animated: the number must MOVE) -->
+<section class="slide" id="slide-break">
   <div class="kicker">Answer three</div>
   <div class="breakwrap">
     <div class="gridbox" id="gridbox"></div>
     <div class="counter">
       <b id="cnt">131,499</b>
-      <span>mutations &nbsp;·&nbsp; <em id="caught" class="em">every one caught</em></span>
+      <span>the claim, minus what was missed &nbsp;·&nbsp; <em id="caught" class="em">breaking&hellip;</em></span>
     </div>
   </div>
   <p class="lede">So we break things <span class="em">on purpose</span>, 131,499 ways,
   and watch whether the number <span class="em2">moves</span>.</p>
-  <div class="foot"><span>04 — break it</span><span>10</span></div>
+  <div class="foot"><span>04 — break it</span><span>11</span></div>
 </section>
 
 <!-- 11 BREAK IT -->
@@ -224,7 +237,7 @@
   <span class="num">250 of 250</span>.</p>
   <p>Same suite. Same green. <span class="em2">A completely different number —
   and the second one was true.</span></p>
-  <div class="foot"><span>04 — break it</span><span>11</span></div>
+  <div class="foot"><span>04 — break it</span><span>12</span></div>
 </section>
 
 <!-- 12 WITNESS -->
@@ -239,7 +252,7 @@
   </div>
   <p class="lede" style="margin-top:1em">And a signed head, so the chain itself
   cannot be quietly rewritten either.</p>
-  <div class="foot"><span>05 — the witness</span><span>12</span></div>
+  <div class="foot"><span>05 — the witness</span><span>13</span></div>
 </section>
 
 <!-- 13 JUDGE AND DIE -->
@@ -252,7 +265,7 @@
   </div>
   <p class="lede" style="margin-top:1em">Neither is enough alone. A judge alone can be
   steered. A die alone decides nothing.</p>
-  <div class="foot"><span>05 — the witness</span><span>13</span></div>
+  <div class="foot"><span>05 — the witness</span><span>14</span></div>
 </section>
 
 <!-- 14 DOUBLE PRESENTATION -->
@@ -271,7 +284,7 @@
   <span class="num">UNDECIDED 6/6</span>. Real options agreed
   <span class="num">5/5</span> — and it picked the side we did not expect,
   which is how we knew it was reading and not just agreeing.</p>
-  <div class="foot"><span>05 — the witness</span><span>14</span></div>
+  <div class="foot"><span>05 — the witness</span><span>15</span></div>
 </section>
 
 <!-- 15 AHA 3 -->
@@ -284,7 +297,7 @@
   <p class="lede" style="margin-top:.7em">So a system that can say
   <span class="em3">"I don't know, and here is why"</span> is unusual — and it
   is the one that saves you.</p>
-  <div class="foot"><span>05 — the witness</span><span>15</span></div>
+  <div class="foot"><span>05 — the witness</span><span>16</span></div>
 </section>
 
 <!-- 16 WHAT YOU GET -->
@@ -305,7 +318,7 @@
   </ul>
   <p class="lede" style="margin-top:.7em">All of it fixed, all of it with a receipt,
   all of it in the open.</p>
-  <div class="foot"><span>06 — what you get</span><span>16</span></div>
+  <div class="foot"><span>06 — what you get</span><span>17</span></div>
 </section>
 
 <!-- 17 THE QUESTION -->
@@ -317,7 +330,7 @@
   <span style="color:var(--dim)">the run, the hash, the exact command</span></p>
   <p class="lede" style="margin-top:.9em"><b>2. Can you re-derive it yourself?</b><br>
   <span style="color:var(--dim)">and if you break it — does the number move?</span></p>
-  <div class="foot"><span>06 — what you get</span><span>17</span></div>
+  <div class="foot"><span>06 — what you get</span><span>18</span></div>
 </section>
 
 <!-- 18 CLOSING VIDEO -->
@@ -329,7 +342,7 @@
   </div>
   <p class="lede">Everything in this deck is in the open, with receipts.
   Come and break something.</p>
-  <div class="foot"><span>SuperInstance</span><span>18</span></div>
+  <div class="foot"><span>SuperInstance</span><span>19</span></div>
 </section>
 
 </div>
@@ -341,6 +354,7 @@
 <script>
 const slides=[...document.querySelectorAll('.slide')];let i=0;
 /* --- slide 10: the number MUST move, or the suite is decoration --- */
+const fmt=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 const gridbox=document.getElementById('gridbox'), cnt=document.getElementById('cnt'),
       caught=document.getElementById('caught');
 let cells=[], built=false, raf=null;
@@ -352,26 +366,58 @@ function buildGrid(){
 function playBreak(){
   buildGrid();
   if(raf) cancelAnimationFrame(raf);
-  const TARGET=131499; let t=0; let misses=0;
+  const TARGET=131499; let t=0; let misses=0, lastDone=-1;
   cells.forEach(c=>{c.className='';});
-  cnt.classList.remove('dip'); caught.textContent='every one caught';
+  cnt.classList.remove('dip'); caught.textContent='breaking '+fmt(TARGET)+' ways…';
   const tick=()=>{
     t++;
     const done=Math.floor(t/2);
+    // EACH CELL EXACTLY ONCE. `done` advances every other frame, so
+    // without this guard every cell was processed TWICE -- and a miss was
+    // counted twice, so the caption said 33 missed where there are 17.
     if(done<cells.length){
-      const c=cells[done];
-      // 1 in 17 mutations is MISSED -- and a miss must be visible.
-      if((done*2654435761)%17===0){ misses++; c.className='miss'; }
-      else c.className='hit';
-      const caughtNow=Math.max(0,done-misses);
-      const shown=TARGET- (done-Math.max(0,done-misses)) - Math.floor(done*0.0);
-      const live=131499-Math.max(0,done-misses);
-      cnt.textContent=String(TARGET).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-      if(misses>0){cnt.classList.add('dip');caught.textContent=misses+' missed — and that is the finding';}
+      if(done!==lastDone){
+        lastDone=done;
+        const c=cells[done];
+        // 1 in 17 GROUPS is MISSED -- and a miss must be visible.
+        if(((done+1)*2654435761)%17===0){ misses++; c.className='miss'; }
+        else c.className='hit';
+        // THE NUMBER MUST MOVE. It counts the mutations CAUGHT, and it ends
+        // BELOW the headline number, because some were missed.
+        //
+        // IT USED TO WRITE A CONSTANT HERE. The counter showed 131,499 for
+        // the whole run and 131,499 at the end, on the one slide whose text
+        // says "watch whether the number moves" -- and three dead
+        // variables sat beside it (caughtNow, shown, live), computed and
+        // never used, which is what a working counter looks like after
+        // something overwrote it.
+        //
+        // Each cell stands for a SHARE of the run, so a missed cell is a
+        // missed share. The counter therefore counts UP, dips when a group
+        // is missed, and finishes short of 131,499 by exactly the
+        // mutations that were not caught.
+        // THE COUNTER IS THE CLAIM, MINUS WHAT HAS BEEN DISPROVEN. It
+        // starts at 131,499 -- the number the suite claims -- and every
+        // time a group turns out to be MISSED, the number DROPS.
+        //
+        // It used to climb with the run. That was wrong: a miss and a hit
+        // both advance the run by one group, so the caught count went FLAT
+        // on a miss rather than down, and a flat frame in a counter that
+        // moves 460 per frame is INVISIBLE. The grid shows the progress;
+        // the counter shows the score.
+        const share=TARGET/cells.length;
+        const live=Math.max(0,TARGET-misses*share);
+        cnt.textContent=String(Math.floor(live)).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+        if(misses>0){cnt.classList.add('dip');caught.textContent=misses+' groups missed — '+fmt(TARGET-live)+' not caught';}
+      }
       raf=requestAnimationFrame(tick);
     } else {
-      cnt.textContent=String(TARGET).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-      caught.textContent=misses? misses+' missed' : 'every one caught';
+      const share=TARGET/cells.length;
+      const live=Math.max(0,TARGET-misses*share);
+      cnt.textContent=String(Math.floor(live)).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+      caught.textContent=misses
+        ? misses+' groups missed — '+fmt(TARGET-live)+' not caught'
+        : 'every one caught';
       raf=null;
     }
   };
@@ -383,7 +429,11 @@ function show(n){
   slides.forEach((s,k)=>{ if(k!==n){const v=s.querySelector('video'); if(v){v.pause();}}});
   const v=slides[n].querySelector('video');
   if(v){ v.currentTime=0; v.play().catch(()=>{}); }
-  if(n===9){ playBreak(); }
+  // THE ANIMATION SLIDE IS FOUND BY ITS ID, NOT BY ITS INDEX. It used to be
+  // `n===9`, which meant inserting a slide anywhere above it would detach
+  // the animation from its slide -- silently, because the deck would still
+  // look fine and the number would simply stop moving.
+  if(slides[n] && slides[n].id==='slide-break'){ playBreak(); }
   i=n; document.getElementById('bar').style.width=((n+1)/slides.length*100)+'%';
   location.hash='#'+(n+1);
 }
