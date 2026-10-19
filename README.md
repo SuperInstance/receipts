@@ -62,13 +62,11 @@ the point of the deck as much as its content.
 
 ## The videos
 
-- `green-light.mp4`, `boxes.mp4` — generated with MiniMax
+- `green-light.mp4`, `boxes.mp4`, `break-move.mp4` — generated with MiniMax
   (`MiniMax-Hailuo-02`), prompted for visuals that carry the idea without
   any text, because a video model asked to render words renders them badly.
-  The third prompt (`break-move`) is **in `video_jobs.json` and ready** — it
-  just could not be submitted, because the MiniMax token plan hit its credit
-  limit (`status_code 2056`) partway through the run. `python3 -m
-  videos.mkvid` will pick it up when there is credit.
+  The third one waited a long time on the credit limit (`status_code 2056`)
+  and came back when it cleared.
 - `superinstance-intro.mp4` — Casey Mezzoforte's original, from
   `SuperInstance/AI-Writings/videos/`.
 
@@ -77,6 +75,23 @@ Regenerate the three with:
 ```bash
 python3 -m videos.mkvid          # needs MINIMAX_KEY and credit
 ```
+
+**AND THE CHECKS, because a deck nobody checks is a decoration:**
+
+```bash
+python3 check-deck.py             # every referenced video exists; no orphans
+node   check-animation.mjs        # the slide-10 counter ACTUALLY MOVES
+```
+
+`check-animation.mjs` runs the deck's own inline script against a small DOM
+shim and asserts that the number moves, that it ends below 131,499, that it
+visibly dips, and that the caption agrees. It needs no browser.
+
+**It exists because the counter was a CONSTANT.** The deck's central slide
+says *"watch whether the number moves"* and the number had never moved —
+and the check that would have caught it did not exist. The test was
+verified against the old file, where it fails with three specific failures,
+so it is a check and not a comment.
 
 **Note:** `api.minimax.chat` REJECTS the key (`status_code 2049, "invalid
 api key"`). The working host is **`api.minimax.io`**. That cost one
